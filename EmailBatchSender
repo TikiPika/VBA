@@ -1,0 +1,51 @@
+Sub SendPersonalizedEmails()
+    Dim xlApp As Object
+    Dim xlWB As Object
+    Dim xlSheet As Object
+    Dim i As Integer
+    Dim LastRow As Long
+    Dim MailItem As Outlook.MailItem
+    Dim FilePath As String
+    
+    ' --- 配置区 ---
+    FilePath = "C:\Users\你的用户名\Desktop\MailList.xlsx" ' 请修改为你的 Excel 真实路径
+    
+    ' 启动 Excel 引擎
+    On Error Resume Next
+    Set xlApp = CreateObject("Excel.Application")
+    Set xlWB = xlApp.Workbooks.Open(FilePath)
+    Set xlSheet = xlWB.Sheets(1)
+    
+    ' 获取最后一行行号
+    LastRow = xlSheet.Cells(xlSheet.Rows.Count, 1).End(-4162).Row ' -4162 代表 xlUp
+    
+    ' 循环处理每一行（从第2行开始）
+    For i = 2 To LastRow
+        Set MailItem = Application.CreateItem(olMailItem)
+        
+        With MailItem
+            .To = xlSheet.Cells(i, 2).Value ' 读取第二列：邮箱
+            .Subject = "关于业务合作的跟进" ' 邮件主题
+            
+            ' 邮件正文：使用 HTMLBody 可以设置更好看的格式
+            .HTMLBody = "<html><body>" & _
+                        "<p>亲爱的 " & xlSheet.Cells(i, 1).Value & "：</p>" & _
+                        "<p>您好！这是一封通过 Outlook 自动发送的测试邮件。</p>" & _
+                        "<p>祝您工作顺利，万事如意。</p>" & _
+                        "</body></html>"
+            
+            ' 测试阶段建议用 .Display，它会弹出窗口让你预览，不会真的发出去
+            ' 正式发送时，请将 .Display 改为 .Send
+            .Display 
+        End With
+        
+        ' 释放对象
+        Set MailItem = Nothing
+    Next i
+    
+    ' 关闭 Excel
+    xlWB.Close False
+    xlApp.Quit
+    
+    MsgBox "批量处理已完成！", vbInformation
+End Sub
